@@ -1,4 +1,5 @@
 import subprocess
+import json
 from pathlib import Path
 from datetime import datetime
 
@@ -43,8 +44,8 @@ for target in targets:
         "-w", wordlist,
         "-v",
         "-c",                    # FFUF color output
-        "-t", "20",              # threads
-        "-rate", "50",           # requests/sec
+        "-t", "20",              # Threads
+        "-rate", "50",           # Requests/sec
         "-mc", "200,301,302,401,403",
         "-of", "json",
         "-o", str(output_file)
@@ -68,6 +69,45 @@ for target in targets:
     if process.returncode == 0:
         print(f"{GREEN}[+] Scan Completed Successfully{RESET}")
         print(f"{GREEN}[+] Results saved to:{RESET} {output_file}")
+
+        try:
+            with open(output_file, "r") as f:
+                data = json.load(f)
+
+            # Detailed TXT report
+            report_file = results_dir / f"{hostname}_report.txt"
+
+            with open(report_file, "w") as report:
+                report.write(f"Target: {target}\n")
+                report.write(f"Scan Time: {datetime.now()}\n")
+                report.write("=" * 70 + "\n\n")
+
+                for result in data.get("results", []):
+                    report.write(
+                        f"[{result['status']}] "
+                        f"{result['url']} "
+                        f"(Size: {result['length']}, "
+                        f"Words: {result['words']}, "
+                        f"Lines: {result['lines']})\n"
+                    )
+
+            # URLs-only TXT file
+            urls_file = results_dir / f"{hostname}_urls.txt"
+
+            with open(urls_file, "w") as urls:
+                for result in data.get("results", []):
+                    urls.write(result["url"] + "\n")
+
+            print(f"{GREEN}[+] Report saved to:{RESET} {report_file}")
+            print(f"{GREEN}[+] URLs saved to:{RESET} {urls_file}")
+            print(
+                f"{GREEN}[+] Total routes found:{RESET} "
+                f"{len(data.get('results', []))}"
+            )
+
+        except Exception as e:
+            print(f"{RED}[!] Error creating TXT reports: {e}{RESET}")
+
     else:
         print(f"{RED}[!] FFUF Scan Failed{RESET}")
 
