@@ -31,7 +31,7 @@ This repository serves as a centralized hub for automation scripts. The goal is 
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/scirpts.git
+   git clone https://github.com/Suveer-Upasani/Scripts
    cd scirpts
    ```
 2. Set up a virtual environment:
